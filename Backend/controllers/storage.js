@@ -1,10 +1,55 @@
 const { response, request } = require('express');
-const Storage = require('../models/storage');
 const { Sequelize } = require('sequelize');
+const Storage = require('../models/storage');
+const Store = require('../models/store');
+const Product = require('../models/product');
 
+
+const getStorages=async(req=request, res = response)=>{
+    try {
+        const { ...queryParameters } = req.query;
+        const searchOptions = {};
+
+        Object.keys(queryParameters).forEach(key => {
+            const value = queryParameters[key];
+
+            if (value !== undefined && value !== null && value !== '') {
+                searchOptions[key] = {
+                    [Sequelize.Op.eq]: value
+                };
+            }
+        });
+        
+        const storages = await Storage.findAll({
+            include:[
+                {
+                    model:Product
+                },
+                {
+                    model:Store
+                }
+            ],
+            where: {
+                ...searchOptions
+            }
+        });
+
+
+        res.status(200).json({
+            ok: true,
+            storages
+        })
+    } catch (error) {
+        res.status(404).json({
+            ok: false,
+            msg: "Hable con el Admin"
+        })
+    }
+}
 
 const postStorage=async(req=request, res = response)=>{
     try {
+        const p=req.p;
 
         const{id_product,id_store, lot}=req.body;
 
@@ -18,7 +63,7 @@ const postStorage=async(req=request, res = response)=>{
 
         res.status(200).json({
             ok: true,
-            storage
+            p
         })
     } catch (error) {
         res.status(404).json({
@@ -54,20 +99,20 @@ const putLotStorage=async(req=request, res = response)=>{
 const putStorage=async(req=request, res = response)=>{
     try {
     
-        const r=req.r;
-        // const {id_storage}= req.params;
-        // const {id_product,id_store,lot}= req.body;
+        
+        const {id_storage}= req.params;
+        const {id_product,id_store,lot}= req.body;
 
-        // const storage= await Storage.update(
-        //     {id_product,id_store,lot},
-        //     {where:{id:id_storage}}
-        // )
+        const storage= await Storage.update(
+            {id_product,id_store,lot},
+            {where:{id:id_storage}}
+        )
           
     
         res.status(200).json({
             ok: true,
-            // storage
-            r
+            storage
+            
         })
     } catch (error) {
         res.status(404).json({
@@ -79,6 +124,7 @@ const putStorage=async(req=request, res = response)=>{
 }
 
 module.exports = {
+    getStorages,
     postStorage,
     putStorage,
     putLotStorage,

@@ -6,6 +6,7 @@ const validateMaterial = require('../middleware/validateMaterial');
 const validateProduct = require('../middleware/validateProduct');
 const validateStorage = require('../middleware/validateStorage');
 const validateStore = require('../middleware/validateStore');
+const validateFile = require('../middleware/validateFile');
 
 
 module.exports = {
@@ -16,6 +17,7 @@ module.exports = {
     ...validateMaterial,
     ...validateProduct,
     ...validateStorage,
-    ...validateStore
+    ...validateStore,
+    ...validateFile
 }
 

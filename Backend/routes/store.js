@@ -2,23 +2,26 @@ const { Router } = require('express');
 const { check } = require('express-validator')
 
 const { getStores,
-    getAllStore,
     getStoreById,
     postStore,
     putStore,
     deleteStore,
-    getValidStore
+    getValidStore,
+    putImgStore
 } = require('../controllers/store');
 
 const { validate, validateIdStore, validateIdProduct } = require('../middleware');
+const { validateFile } = require('../middleware/validateFile');
 
 const router = Router();
 
 router.get('/', getStores);
+
 router.get('/id/:id_store', [
     validateIdStore(),
 ], getStoreById);
-router.get('/all', getAllStore);
+
+
 router.get('/valid',[
     check('id_product', 'El producto es requerido').notEmpty(),
     validate,
@@ -31,8 +34,8 @@ router.post('/',
         check('location', 'La ubicación es requerido').notEmpty(),
         check('size', 'El Tamaño es requerido').notEmpty().isNumeric(),
         validate
-
     ], postStore);
+
 router.put('/:id_store',
     [
         validateIdStore(),
@@ -41,6 +44,13 @@ router.put('/:id_store',
         check('size', 'El Tamaño es requerido').notEmpty().isNumeric(),
         validate
     ], putStore);
+
+router.put('/img/:id_store',
+    [
+        validateIdStore(),
+        validateFile
+    ], putImgStore);
+
 router.delete('/:id_store', validateIdStore(),deleteStore);
 
 

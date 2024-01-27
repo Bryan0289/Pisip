@@ -5,6 +5,7 @@ const { getProducts,
     getProductById,
     postProduct,
     putProduct,
+    putImgProduct,
     deleteProduct,
     getProductsLoose
 } = require('../controllers/product');
@@ -14,7 +15,8 @@ const { validate,
     validateIdColor,
     validateIdFinished,
     validateIdMaterial,
-    validateIdProduct } = require('../middleware');
+    validateIdProduct, 
+    validateFile} = require('../middleware');
 
 const router = Router();
 
@@ -67,6 +69,12 @@ router.put('/:id_product',
         validateIdFinished('body')
     ]
     , putProduct);
+router.put('/img/:id_product',
+    [
+        validateIdProduct(),
+        validateFile
+    ]
+    , putImgProduct);
 
 router.delete('/:id_product',
 [

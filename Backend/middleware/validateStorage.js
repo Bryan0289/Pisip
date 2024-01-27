@@ -36,13 +36,13 @@ const validateIdStorage = async (req = request, res = response, next) => {
 
 const validateStorageLot = async (req = request, res = response, next) => {
     try {
-        // todo:validar con la multiplicacion de lot y product.size
-        const { id_store, lot } = req.body;
+        const { lot } = req.body;
         const store=req.store;
-        const newProduct=req.product
+        const product=req.product
+        var occupiedSpace=0;
         
 
-        const storage = await Storage.findAll({
+        const storages = await Storage.findAll({
             include:[
                 {
                     model:Product,
@@ -53,17 +53,21 @@ const validateStorageLot = async (req = request, res = response, next) => {
                 lot: {
                     [Op.gt]: 0 
                 },
-                id_store
+                id_store:store.id
             }
-        })
+        });
         
-        var sizeTotalLot=0;
-        for (const s of storage) {
-            const sizeLot=s.Product.size*s.lot;
-            sizeTotalLot+=sizeLot;
+        if(storages){
+            for(const storage of storages){
+                occupiedSpace+=storage.lot*storage.Product.size
+            }
         }
-        const sizeFree=store.size-sizeTotalLot;
-        if(sizeFree<=(newProduct.size*lot)){
+        req.p=occupiedSpace;
+
+        const sizeNewProduct=product.size*lot
+
+
+        if((occupiedSpace+sizeNewProduct)>=store.size){
             res.status(404).json({
                 ok: false,
                 msg: "Espacio insuficiente"
@@ -76,7 +80,6 @@ const validateStorageLot = async (req = request, res = response, next) => {
     } catch (error) {
         res.status(404).json({
             ok: false,
-            msg: "aqui",
             error
         })
     }
@@ -94,8 +97,6 @@ const validateLot = async (req = request, res = response, next) => {
             });
             return;
         }
-
-
 
         next();
 

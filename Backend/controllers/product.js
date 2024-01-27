@@ -8,20 +8,38 @@ const Material = require('../models/material');
 const Finished = require('../models/finished');
 const Store = require('../models/store');
 
+const { saveFile, deleteFile } = require('../helpers/file');
+
+
 
 const getProducts = async (req = request, res = response) => {
     try {
-        const queryParameters = req.query;
+        const { name, status, ...queryParameters } = req.query;
         const searchOptions = {};
+
+        if (status=='false') {
+            searchOptions.status = false
+        } else if (status == 'true') {
+            searchOptions.status = true
+        }
+        if (name) {
+
+            searchOptions.name = {
+                [Sequelize.Op.like]: `%${name}%`
+            };
+        }
+
+
         Object.keys(queryParameters).forEach(key => {
             const value = queryParameters[key];
 
-            if (value) {
+            if (value !== undefined && value !== null && value !== '') {
                 searchOptions[key] = {
-                    [Sequelize.Op.like]: `%${value}%`
+                    [Sequelize.Op.eq]: value
                 };
             }
         });
+        console.log(queryParameters);
         const products = await Product.findAll({
             where: {
                 ...searchOptions
@@ -46,7 +64,7 @@ const getProductById = async (req = request, res = response) => {
 
         const [product, storage] = await Promise.all([
             Product.findOne({
-                attributes: ['id', 'name', 'description', 'size'],
+                attributes: ['id', 'name', 'description', 'size', 'img'],
                 include: [
                     { model: Color },
                     { model: Material },
@@ -101,6 +119,33 @@ const postProduct = async (req = request, res = response) => {
         })
     }
 }
+const putImgProduct = async (req = request, res = response) => {
+    try {
+
+        const { id_product } = req.params;
+
+        const product = await Product.findByPk(id_product);
+
+
+        if (product.img) {
+            deleteFile(product.img)
+        }
+
+        product.img = await saveFile(req.files);
+
+        await product.save()
+
+        res.status(200).json({
+            ok: true,
+            product
+        })
+    } catch (error) {
+        res.status(404).json({
+            ok: false,
+            msg: "Hable con el Admin"
+        })
+    }
+}
 const putProduct = async (req = request, res = response) => {
     try {
         const { id_product } = req.params;
@@ -115,7 +160,7 @@ const putProduct = async (req = request, res = response) => {
                 id_material,
                 id_category,
                 id_finished,
-                status:true
+                status: true
             },
             {
                 where: {
@@ -139,23 +184,16 @@ const putProduct = async (req = request, res = response) => {
 const deleteProduct = async (req = request, res = response) => {
     try {
         const { id_product } = req.params;
-        const [product, storage] = await Promise.all(
-            Product.update(
-                { status: false },
-                { where: { id: id_product } }
-            ),
-            Storage.update(
-                { lot: 0 },
-                {
-                    where: { id_product }
-                }
-            )
+        const product = await Product.update(
+            { status: false },
+            { where: { id: id_product } }
         )
+
 
         res.status(200).json({
             ok: true,
-            product,
-            storage
+            product
+
         })
     } catch (error) {
         res.status(404).json({
@@ -176,7 +214,8 @@ const getProductsLoose = async (req = request, res = response) => {
                     model: Store,
                     where: { status: 0 }
                 },
-                { model: Product, 
+                {
+                    model: Product,
                     attributes: ['id', 'name', 'description', 'size'],
                 }
             ],
@@ -202,6 +241,7 @@ module.exports = {
     getProductById,
     postProduct,
     putProduct,
+    putImgProduct,
     deleteProduct,
     getProductsLoose
 }

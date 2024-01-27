@@ -3,14 +3,35 @@ const Store = require('../models/store');
 const Storage = require('../models/storage');
 const Product = require('../models/product');
 const { Sequelize } = require('sequelize');
+const { saveFile, deleteFile } = require('../helpers/file');
+
 
 
 const getStores = async (req = request, res = response) => {
     try {
 
+        const {status,...queryParameters} = req.query;
+        const searchOptions = {};
+        
+        if(!status){
+            searchOptions.status=true
+        }else if(status=='false'){
+            searchOptions.status=false
+        }
+
+          
+          Object.keys(queryParameters).forEach(key => {
+            const value = queryParameters[key];
+          
+            if (value) {
+              searchOptions[key] = {
+                [Sequelize.Op.like]: `%${value}%`
+              };
+            }
+          });
         const stores = await Store.findAll({
             where: {
-                status: true
+                ...searchOptions
             }
         });
 
@@ -96,21 +117,21 @@ const getValidStore = async (req = request, res = response) => {
         ]
         )
 
-        const stors=[
+        const stors = [
             ...newStores,
             ...freeStores.map(store => {
                 return {
-                  "totalSize": store.totalSize,
-                  "id": store['Store.id'],
-                  "name": store['Store.name'],
-                  "location": store['Store.location'],
-                  "size": store['Store.size'],
-                  "status": store['Store.status'],
-                  "createdAt": store['Store.createdAt'],
-                  "updatedAt": store['Store.updatedAt']
+                    "totalSize": store.totalSize,
+                    "id": store['Store.id'],
+                    "name": store['Store.name'],
+                    "location": store['Store.location'],
+                    "size": store['Store.size'],
+                    "status": store['Store.status'],
+                    "createdAt": store['Store.createdAt'],
+                    "updatedAt": store['Store.updatedAt']
                 };
-              }),
-            ]
+            }),
+        ]
 
 
         res.status(200).json({
@@ -125,23 +146,6 @@ const getValidStore = async (req = request, res = response) => {
             ok: false,
             msg: "Hable con el Admin get store :D",
             error
-        })
-    }
-}
-const getAllStore = async (req = request, res = response) => {
-    try {
-
-        const stores = await Store.findAll();
-
-
-        res.status(200).json({
-            ok: true,
-            stores
-        })
-    } catch (error) {
-        res.status(404).json({
-            ok: false,
-            msg: "Hable con el Admin getAll store"
         })
     }
 }
@@ -193,6 +197,35 @@ const putStore = async (req = request, res = response) => {
     }
 
 }
+const putImgStore = async (req = request, res = response) => {
+    try {
+
+        const { id_store } = req.params;
+
+        const store=await Store.findByPk(id_store);
+        
+        
+        if ( store.img ) {
+            deleteFile(store.img)
+        }
+        
+        store.img=await saveFile(req.files);
+        
+        await store.save()
+
+        res.status(200).json({
+            ok: true,
+            store
+        })
+    } catch (error) {
+        res.status(404).json({
+            ok: false,
+            msg: "Hable con el Admin put img store",
+            error
+        })
+    }
+
+}
 const deleteStore = async (req = request, res = response) => {
     try {
 
@@ -217,10 +250,10 @@ const deleteStore = async (req = request, res = response) => {
 
 module.exports = {
     getStores,
-    getAllStore,
     getStoreById,
     postStore,
     putStore,
+    putImgStore,
     deleteStore,
     getValidStore
 }
