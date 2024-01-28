@@ -41,6 +41,20 @@ const getProducts = async (req = request, res = response) => {
         });
         console.log(queryParameters);
         const products = await Product.findAll({
+            include:[
+                {
+                    model:Color
+                },
+                {
+                    model:Category
+                },
+                {
+                    model:Material
+                },
+                {
+                    model:Finished
+                },
+            ],
             where: {
                 ...searchOptions
             }

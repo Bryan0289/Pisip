@@ -3,6 +3,7 @@ const { check } = require('express-validator')
 
 const {
     getStorages,
+    getStorageById,
     postStorage,
     putLotStorage,
 } = require('../controllers/storage');
@@ -18,6 +19,7 @@ const { validate,
 const router = Router();
 
 router.get('/', getStorages)
+router.get('/:id_storage',[validateIdStorage], getStorageById)
 
 router.post('/',
     [

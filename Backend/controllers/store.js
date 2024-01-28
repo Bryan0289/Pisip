@@ -13,10 +13,10 @@ const getStores = async (req = request, res = response) => {
         const {status,...queryParameters} = req.query;
         const searchOptions = {};
         
-        if(!status){
-            searchOptions.status=true
-        }else if(status=='false'){
-            searchOptions.status=false
+        if (status=='false') {
+            searchOptions.status = false
+        } else if (status == 'true') {
+            searchOptions.status = true
         }
 
           

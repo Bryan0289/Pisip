@@ -47,6 +47,35 @@ const getStorages=async(req=request, res = response)=>{
     }
 }
 
+const getStorageById= async(req=request, res = response)=>{
+    try {
+        const { id_storage } = req.params;
+
+        
+        const storage = await Storage.findByPk(id_storage,{
+            include:[
+                {
+                    model:Product
+                },
+                {
+                    model:Store
+                }
+            ]
+        });
+
+
+        res.status(200).json({
+            ok: true,
+            storage
+        })
+    } catch (error) {
+        res.status(404).json({
+            ok: false,
+            msg: "Hable con el Admin"
+        })
+    }
+}
+
 const postStorage=async(req=request, res = response)=>{
     try {
         const p=req.p;
@@ -125,6 +154,7 @@ const putStorage=async(req=request, res = response)=>{
 
 module.exports = {
     getStorages,
+    getStorageById,
     postStorage,
     putStorage,
     putLotStorage,
